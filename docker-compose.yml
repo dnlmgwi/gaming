@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    container_name: spacetimedb
+    pull_policy: always
+    ports:
+      - "3000:3000"
+    command: start
+    volumes:
+      # Persist SpacetimeDB data
+      - spacetimedb-data:/root/.spacetime
+    restart: unless-stopped
+    environment:
+      # Add any environment variables here if needed
+      # SPACETIME_LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  spacetimedb-data:
+    driver: local
