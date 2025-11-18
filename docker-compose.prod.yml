@@ -1,0 +1,45 @@
+name: "newwave-sync"
+
+services:
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    container_name: spacetimedb
+    pull_policy: always
+    command: start
+    volumes:
+      # Persist SpacetimeDB data in production
+      - spacetimedb-data:/root/.spacetime
+    restart: unless-stopped
+    environment:
+      # Production environment variables
+      SPACETIME_LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - traefik
+      - spacetime-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.spacetime.rule=Host(`spacetime.newwave.mw`)"
+      - "traefik.http.routers.spacetime.entrypoints=web"
+      - "traefik.http.services.spacetime.loadbalancer.server.port=3000"
+      # Optional: HTTPS configuration (uncomment if using Let's Encrypt)
+      # - "traefik.http.routers.spacetime-secure.rule=Host(`spacetime.newwave.mw`)"
+      # - "traefik.http.routers.spacetime-secure.entrypoints=websecure"
+      # - "traefik.http.routers.spacetime-secure.tls.certresolver=letsencrypt"
+
+volumes:
+  spacetimedb-data:
+    driver: local
+
+networks:
+  traefik:
+    external: true
+    name: traefik
+  spacetime-internal:
+    internal: true

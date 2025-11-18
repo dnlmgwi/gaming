@@ -9,7 +9,7 @@ This repository contains Docker configuration for running SpacetimeDB standalone
 
 ## Quick Start
 
-### Using Docker Compose (Recommended)
+### Development: Using Docker Compose (Recommended)
 
 Start SpacetimeDB:
 
@@ -33,6 +33,47 @@ Stop and remove volumes (WARNING: This will delete all data):
 
 ```bash
 docker-compose down -v
+```
+
+### Production: Using Traefik Reverse Proxy
+
+For production deployments with Traefik, use the production compose file:
+
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**Prerequisites for production:**
+- Traefik must be running with a network named `traefik`
+- DNS record for `spacetime.newwave.mw` pointing to your server
+- (Optional) Configure Let's Encrypt for HTTPS by uncommenting the secure router labels
+
+**Production deployment steps:**
+
+1. Ensure Traefik network exists:
+```bash
+docker network create traefik
+```
+
+2. Start SpacetimeDB:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+3. Check logs:
+```bash
+docker-compose -f docker-compose.prod.yml logs -f spacetimedb
+```
+
+4. Access SpacetimeDB at: `http://spacetime.newwave.mw`
+
+**Enable HTTPS (recommended for production):**
+
+Edit `docker-compose.prod.yml` and uncomment the HTTPS labels:
+```yaml
+- "traefik.http.routers.spacetime-secure.rule=Host(`spacetime.newwave.mw`)"
+- "traefik.http.routers.spacetime-secure.entrypoints=websecure"
+- "traefik.http.routers.spacetime-secure.tls.certresolver=letsencrypt"
 ```
 
 ### Using Docker Run
@@ -64,10 +105,13 @@ environment:
 
 ## Accessing SpacetimeDB
 
-Once running, SpacetimeDB will be available at:
-
+**Development (docker-compose.yml):**
 - HTTP API: `http://localhost:3000`
 - WebSocket: `ws://localhost:3000`
+
+**Production (docker-compose.prod.yml with Traefik):**
+- HTTP API: `http://spacetime.newwave.mw` (or `https://spacetime.newwave.mw` if HTTPS enabled)
+- WebSocket: `ws://spacetime.newwave.mw` (or `wss://spacetime.newwave.mw` if HTTPS enabled)
 
 ## Health Check
 
